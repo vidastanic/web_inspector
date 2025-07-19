@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebChecker - Web Scraper</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            padding: 40px;
+        }
+
+        .form-section {
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 6px;
+            font-size: 16px;
+            transition: border-color 0.2s;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(79, 70, 229, 0.3);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: #6b7280;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+        }
+
+        .progress-section {
+            margin-bottom: 30px;
+        }
+
+        .progress-container {
+            background: #f3f4f6;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 12px;
+            background: #e5e7eb;
+            border-radius: 6px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #10b981 0%, #059669 100%);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .progress-text {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            color: #6b7280;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-idle { background: #f3f4f6; color: #6b7280; }
+        .status-running { background: #dbeafe; color: #1d4ed8; }
+        .status-completed { background: #d1fae5; color: #065f46; }
+        .status-error { background: #fee2e2; color: #dc2626; }
+
+        .results-section {
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: 30px;
+        }
+
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .results-count {
+            font-size: 18px;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .export-btn {
+            background: #059669;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .export-btn:hover {
+            background: #047857;
+        }
+
+        .export-btn:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .export-btn:disabled:hover {
+            background: #9ca3af;
+        }
+
+        .results-list {
+            max-height: 500px;
+            overflow-y: auto;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            background: white;
+        }
+
+        .result-item {
+            padding: 16px;
+            border-bottom: 1px solid #f3f4f6;
+            transition: background 0.2s;
+        }
+
+        .result-item:hover {
+            background: #f9fafb;
+        }
+
+        .result-item:last-child {
+            border-bottom: none;
+        }
+
+        .result-url {
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 8px;
+            word-break: break-all;
+        }
+
+        .result-match {
+            background: #fef3c7;
+            color: #92400e;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+
+        .no-results {
+            text-align: center;
+            color: #6b7280;
+            font-style: italic;
+            padding: 40px 20px;
+        }
+
+        .no-results .icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .no-results .message {
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+
+        .no-results .hint {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        .error-message {
+            background: #fee2e2;
+            color: #dc2626;
+            padding: 16px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            border-left: 4px solid #dc2626;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f4f6;
+            border-radius: 50%;
+            border-top-color: #4f46e5;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .main-content {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 WebChecker</h1>
+            <p>Find specific characters and patterns across websites</p>
+        </div>
+
+        <div class="main-content">
+            <!-- Input Form -->
+            <div class="form-section">
+                <h2 style="margin-bottom: 20px; color: #374151;">Scraping Configuration</h2>
+                
+                <div class="form-group">
+                    <label for="url">Website URL</label>
+                    <input type="url" id="url" placeholder="example.com or https://example.com" required>
+                    <small style="color: #6b7280; margin-top: 4px; display: block;">
+                        Protocol (https://) will be added automatically if missing
+                    </small>
+                </div>
+
+                <div class="form-group">
+                    <label for="pattern">Pattern to Search</label>
+                    <input type="text" id="pattern" placeholder="™, @, ©, or custom regex" required>
+                    <small style="color: #6b7280; margin-top: 4px; display: block;">
+                        Examples: ™ (trademark), @ (email), © (copyright), or custom regex patterns
+                    </small>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="maxPages">Max Pages</label>
+                        <input type="number" id="maxPages" value="50" min="1" max="1000">
+                    </div>
+                    <div class="form-group">
+                        <label for="maxDepth">Max Depth</label>
+                        <input type="number" id="maxDepth" value="3" min="1" max="10">
+                    </div>
+                    <div class="form-group">
+                        <label for="followSitemap">Follow Sitemap</label>
+                        <select id="followSitemap">
+                            <option value="true">Yes</option>
+                            <option value="false">No</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button id="startBtn" class="btn">🚀 Start Scraping</button>
+                <button id="stopBtn" class="btn btn-danger hidden">⏹️ Stop</button>
+                <button id="clearBtn" class="btn btn-secondary hidden">🗑️ Clear Results</button>
+            </div>
+
+            <!-- Progress Section -->
+            <div id="progressSection" class="progress-section hidden">
+                <div class="progress-container">
+                    <div class="progress-bar">
+                        <div id="progressFill" class="progress-fill"></div>
+                    </div>
+                    <div class="progress-text">
+                        <span id="progressText">0%</span>
+                        <span id="currentPage">Ready to start...</span>
+                    </div>
+                    <div style="margin-top: 10px;">
+                        <span id="statusIndicator" class="status-indicator status-idle">Idle</span>
+                        <span id="elapsedTime" style="margin-left: 10px; color: #6b7280;"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Error Section -->
+            <div id="errorSection" class="hidden">
+                <div id="errorMessage" class="error-message"></div>
+            </div>
+
+            <!-- Results Section -->
+            <div id="resultsSection" class="results-section hidden">
+                <div class="results-header">
+                    <div class="results-count">
+                        <span id="resultsCount">0</span> matches found
+                    </div>
+                    <button id="exportBtn" class="export-btn">📥 Export Results</button>
+                </div>
+                <div id="resultsList" class="results-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentSessionId = null;
+        let statusInterval = null;
+
+        // DOM elements
+        const startBtn = document.getElementById('startBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const progressSection = document.getElementById('progressSection');
+        const resultsSection = document.getElementById('resultsSection');
+        const errorSection = document.getElementById('errorSection');
+        const progressFill = document.getElementById('progressFill');
+        const progressText = document.getElementById('progressText');
+        const currentPage = document.getElementById('currentPage');
+        const statusIndicator = document.getElementById('statusIndicator');
+        const elapsedTime = document.getElementById('elapsedTime');
+        const resultsList = document.getElementById('resultsList');
+        const resultsCount = document.getElementById('resultsCount');
+        const exportBtn = document.getElementById('exportBtn');
+
+        // Event listeners
+        startBtn.addEventListener('click', startScraping);
+        stopBtn.addEventListener('click', stopScraping);
+        clearBtn.addEventListener('click', clearResults);
+        exportBtn.addEventListener('click', exportResults);
+
+        async function startScraping() {
+            const urlInput = document.getElementById('url').value.trim();
+            const pattern = document.getElementById('pattern').value.trim();
+            const maxPages = parseInt(document.getElementById('maxPages').value);
+            const maxDepth = parseInt(document.getElementById('maxDepth').value);
+            const followSitemap = document.getElementById('followSitemap').value === 'true';
+
+            if (!urlInput || !pattern) {
+                showError('Please enter both URL and pattern');
+                return;
+            }
+
+            // Auto-add protocol if missing
+            let url = urlInput;
+            if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                url = 'https://' + url;
+                // Show user that we added the protocol
+                console.log(`Added protocol to URL: ${url}`);
+                // Update the input field to show the normalized URL
+                document.getElementById('url').value = url;
+            }
+
+            try {
+                // Auto-clear previous results when starting new scrape
+                hideResults();
+                resetUI();
+                
+                startBtn.disabled = true;
+                startBtn.innerHTML = '<span class="loading"></span> Starting...';
+                
+                const response = await fetch('/api/start-scrape', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        url,
+                        pattern,
+                        max_pages: maxPages,
+                        max_depth: maxDepth,
+                        follow_sitemap: followSitemap
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    currentSessionId = data.session_id;
+                    hideError(); // Clear any previous errors
+                    showProgress();
+                    startStatusPolling();
+                } else {
+                    showError(data.error || 'Failed to start scraping');
+                }
+            } catch (error) {
+                showError('Network error: ' + error.message);
+            } finally {
+                startBtn.disabled = false;
+                startBtn.innerHTML = '🚀 Start Scraping';
+            }
+        }
+
+        async function stopScraping() {
+            if (!currentSessionId) return;
+
+            try {
+                await fetch(`/api/stop/${currentSessionId}`);
+                stopStatusPolling();
+                updateStatus('stopped');
+            } catch (error) {
+                console.error('Error stopping scrape:', error);
+            }
+        }
+
+        async function clearResults() {
+            if (currentSessionId) {
+                try {
+                    await fetch(`/api/clear/${currentSessionId}`);
+                } catch (error) {
+                    console.error('Error clearing session:', error);
+                }
+            }
+            
+            currentSessionId = null;
+            stopStatusPolling();
+            hideProgress();
+            hideResults();
+            hideError();
+            resetUI();
+        }
+
+        function startStatusPolling() {
+            if (statusInterval) clearInterval(statusInterval);
+            
+            statusInterval = setInterval(async () => {
+                if (!currentSessionId) return;
+
+                try {
+                    const response = await fetch(`/api/status/${currentSessionId}`);
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        updateProgress(data.progress);
+                        updateCurrentPage(data.current_page);
+                        updateStatus(data.status);
+                        updateElapsedTime(data.elapsed_time);
+                        updateResults(data.results);
+
+                        if (data.status === 'completed') {
+                            stopStatusPolling();
+                            hideError(); // Clear errors on successful completion
+                        } else if (data.status === 'error') {
+                            stopStatusPolling();
+                            showError(data.error || 'Scraping failed');
+                        }
+                    } else {
+                        stopStatusPolling();
+                        showError('Session not found');
+                    }
+                } catch (error) {
+                    console.error('Error polling status:', error);
+                }
+            }, 1000);
+        }
+
+        function stopStatusPolling() {
+            if (statusInterval) {
+                clearInterval(statusInterval);
+                statusInterval = null;
+            }
+        }
+
+        function showProgress() {
+            progressSection.classList.remove('hidden');
+            stopBtn.classList.remove('hidden');
+            clearBtn.classList.remove('hidden');
+        }
+
+        function hideProgress() {
+            progressSection.classList.add('hidden');
+            stopBtn.classList.add('hidden');
+            clearBtn.classList.add('hidden');
+        }
+
+        function showResults() {
+            resultsSection.classList.remove('hidden');
+        }
+
+        function hideResults() {
+            resultsSection.classList.add('hidden');
+        }
+
+        function showError(message) {
+            document.getElementById('errorMessage').textContent = message;
+            errorSection.classList.remove('hidden');
+        }
+
+        function hideError() {
+            errorSection.classList.add('hidden');
+        }
+
+        function updateProgress(progress) {
+            progressFill.style.width = `${progress}%`;
+            progressText.textContent = `${progress}%`;
+        }
+
+        function updateCurrentPage(page) {
+            if (page) {
+                currentPage.textContent = `Currently scraping: ${page}`;
+            }
+        }
+
+        function updateStatus(status) {
+            statusIndicator.className = `status-indicator status-${status}`;
+            statusIndicator.textContent = status.charAt(0).toUpperCase() + status.slice(1);
+        }
+
+        function updateElapsedTime(seconds) {
+            if (seconds) {
+                const minutes = Math.floor(seconds / 60);
+                const remainingSeconds = Math.floor(seconds % 60);
+                elapsedTime.textContent = `Elapsed: ${minutes}m ${remainingSeconds}s`;
+            }
+        }
+
+        function updateResults(results) {
+            // Always show results section, even if empty
+            showResults();
+            
+            if (results && results.length > 0) {
+                resultsCount.textContent = results.length;
+                exportBtn.disabled = false;
+                resultsList.innerHTML = results.map(result => {
+                    const [url, match] = result.split(': ', 2);
+                    return `
+                        <div class="result-item">
+                            <div class="result-url">${url}</div>
+                            <div class="result-match">${match}</div>
+                        </div>
+                    `;
+                }).join('');
+            } else {
+                // Show "0 matches found" message
+                resultsCount.textContent = '0';
+                exportBtn.disabled = true;
+                resultsList.innerHTML = `
+                    <div class="no-results">
+                        <div class="icon">🔍</div>
+                        <div class="message">No matches found for the specified pattern.</div>
+                        <div class="hint">
+                            Try adjusting your search pattern or check if the website contains the characters you're looking for.
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        function resetUI() {
+            updateProgress(0);
+            updateCurrentPage('Ready to start...');
+            updateStatus('idle');
+            updateElapsedTime(0);
+            resultsList.innerHTML = '';
+            resultsCount.textContent = '0';
+            exportBtn.disabled = true;
+            // Hide results section when resetting
+            hideResults();
+        }
+
+        function exportResults() {
+            const results = Array.from(resultsList.children).map(item => {
+                const url = item.querySelector('.result-url').textContent;
+                const match = item.querySelector('.result-match').textContent;
+                return `${url}: ${match}`;
+            });
+
+            if (results.length === 0) {
+                alert('No results to export');
+                return;
+            }
+
+            const blob = new Blob([results.join('\n')], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'webchecker-results.txt';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // Auto-focus URL input on page load
+        document.getElementById('url').focus();
+    </script>
+</body>
+</html> 

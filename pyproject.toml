@@ -1,0 +1,58 @@
+[project]
+name = "email-scraper"
+version = "0.1.0"
+description = "A web scraper that finds specific characters and patterns on websites"
+authors = [
+    {name = "Lysander Mawby",email = "lysandermawby@gmail.com"}
+]
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "requests>=2.31.0",
+    "beautifulsoup4>=4.12.0",
+    "lxml>=4.9.0",
+    "urllib3>=2.0.0",
+    "typing-extensions>=4.5.0",
+    "flask>=2.3.0"
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "pytest-mock>=3.10.0"
+]
+
+[project.scripts]
+webchecker = "webchecker.main:main"
+webchecker-web = "webchecker.web_app:main"
+
+[tool.poetry]
+name = "email-scraper"
+version = "0.1.0"
+description = "A web scraper that finds specific characters and patterns on websites"
+authors = ["Lysander Mawby <lysandermawby@gmail.com>"]
+readme = "README.md"
+packages = [
+    {include = "webchecker"}
+]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+requests = "^2.31.0"
+beautifulsoup4 = "^4.12.0"
+lxml = "^4.9.0"
+urllib3 = "^2.0.0"
+typing-extensions = "^4.5.0"
+
+[tool.poetry.group.test.dependencies]
+pytest = "^7.0.0"
+pytest-cov = "^4.0.0"
+pytest-mock = "^3.10.0"
+
+[tool.poetry.scripts]
+webchecker = "webchecker.main:main"
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
