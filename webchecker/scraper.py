@@ -4,6 +4,7 @@ Web scraper module for crawling websites and finding patterns.
 
 import requests
 import time
+import threading
 from typing import List, Set, Dict, Any, Optional
 from urllib.parse import urljoin, urlparse
 from bs4 import BeautifulSoup
@@ -56,6 +57,7 @@ class WebScraper:
         
         self.visited_urls: Set[str] = set()
         self.logger = logging.getLogger(__name__)
+        self.stop_event = threading.Event()
     
     def scrape_site(
         self,
@@ -83,13 +85,13 @@ class WebScraper:
         url_queue = deque([(start_url, 0)])
         
         # Add sitemap URLs if requested
-        if self.follow_sitemap:
+        if self.follow_sitemap and not self.stop_event.is_set():
             sitemap_urls = self._discover_sitemap_urls(start_url)
             for url in sitemap_urls:
                 if url not in self.visited_urls:
                     url_queue.append((url, 0))
         
-        while url_queue and len(self.visited_urls) < self.max_pages:
+        while url_queue and len(self.visited_urls) < self.max_pages and not self.stop_event.is_set():
             current_url, depth = url_queue.popleft()
             
             if current_url in self.visited_urls or depth > self.max_depth:
@@ -106,7 +108,8 @@ class WebScraper:
                 results.extend(page_results)
                 
                 # Add delay to be respectful
-                time.sleep(self.delay)
+                if self.stop_event.wait(self.delay):
+                    break
                 
                 # Find new links if we haven't reached max depth
                 if depth < self.max_depth:
@@ -129,6 +132,8 @@ class WebScraper:
         extract_after: bool
     ) -> List[str]:
         """Scrape a single page and find patterns."""
+        if self.stop_event.is_set():
+            return []
         try:
             response = self.session.get(url, timeout=self.timeout)
             response.raise_for_status()
@@ -158,6 +163,8 @@ class WebScraper:
     
     def _extract_links(self, url: str, base_domain: str) -> List[str]:
         """Extract links from a page that belong to the same domain."""
+        if self.stop_event.is_set():
+            return []
         try:
             response = self.session.get(url, timeout=self.timeout)
             response.raise_for_status()
@@ -191,6 +198,8 @@ class WebScraper:
         ]
         
         for location in sitemap_locations:
+            if self.stop_event.is_set():
+                break
             try:
                 response = self.session.get(location, timeout=self.timeout)
                 response.raise_for_status()
@@ -260,6 +269,10 @@ class WebScraper:
         
         return False
     
+    def stop(self):
+        """Stop after the in-flight request returns, without starting another page."""
+        self.stop_event.set()
+
     def close(self):
         """Close the session."""
-        self.session.close() 
+        self.session.close()

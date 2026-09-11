@@ -173,12 +173,12 @@ class PatternMatcher:
         """
         # Common trademark patterns
         trademark_patterns = [
-            r'\b\w+\s*™\b',  # Word followed by TM symbol
-            r'\b\w+\s*®\b',  # Word followed by R symbol
-            r'\b\w+\s*©\b',  # Word followed by copyright symbol
-            r'\b\w+\s*\(TM\)\b',  # Word followed by (TM)
-            r'\b\w+\s*\(R\)\b',   # Word followed by (R)
-            r'\b\w+\s*\(C\)\b',   # Word followed by (C)
+            r'\b\w+\s*™(?!\w)',  # Word followed by TM symbol
+            r'\b\w+\s*®(?!\w)',  # Word followed by R symbol
+            r'\b\w+\s*©(?!\w)',  # Word followed by copyright symbol
+            r'\b\w+\s*\(TM\)(?!\w)',  # Word followed by (TM)
+            r'\b\w+\s*\(R\)(?!\w)',   # Word followed by (R)
+            r'\b\w+\s*\(C\)(?!\w)',   # Word followed by (C)
         ]
         
         matches = []
@@ -200,9 +200,9 @@ class PatternMatcher:
             Dictionary mapping symbol types to lists of matches
         """
         symbol_patterns = {
-            'trademark': r'\b\w+\s*™\b',
-            'registered': r'\b\w+\s*®\b',
-            'copyright': r'\b\w+\s*©\b',
+            'trademark': r'\b\w+\s*™(?!\w)',
+            'registered': r'\b\w+\s*®(?!\w)',
+            'copyright': r'\b\w+\s*©(?!\w)',
             'degree': r'\d+\s*°',
             'currency': r'[\$€£¥]\s*\d+',
             'email': r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b',

@@ -4,7 +4,7 @@ Tests for utility functions.
 
 import pytest
 from webchecker.utils import (
-    validate_url, clean_text, extract_domain, 
+    validate_url, normalize_url, clean_text, extract_domain,
     is_same_domain, sanitize_filename, format_file_size
 )
 
@@ -32,11 +32,18 @@ class TestUtils:
             "ftp://example.com",  # Unsupported scheme
             "",
             "https://",
-            "http://"
+            "http://",
+            "http://example.com:not-a-port",
+            "http://example.com:0"
         ]
         
         for url in invalid_urls:
             assert validate_url(url) is False
+
+    def test_normalization_does_not_hide_unsupported_schemes(self):
+        assert normalize_url('example.com') == 'https://example.com'
+        assert normalize_url('ftp://example.com') == 'ftp://example.com'
+        assert validate_url(normalize_url('ftp://example.com')) is False
     
     def test_clean_text(self):
         """Test text cleaning functionality."""
@@ -87,4 +94,4 @@ class TestUtils:
         assert format_file_size(1024 * 1024) == "1.0MB"
         assert format_file_size(1024 * 1024 * 1024) == "1.0GB"
         assert format_file_size(500) == "500.0B"
-        assert format_file_size(1500) == "1.5KB" 
+        assert format_file_size(1500) == "1.5KB"

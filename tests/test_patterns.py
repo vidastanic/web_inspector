@@ -31,7 +31,7 @@ class TestPatternMatcher:
     
     def test_custom_pattern_matching(self):
         """Test custom regex pattern matching."""
-        matcher = PatternMatcher(custom_pattern=r'\b\w+\s*™\b')
+        matcher = PatternMatcher(custom_pattern=r'\b\w+\s*™(?!\w)')
         text = "This is a test with BrandName™ and AnotherBrand™"
         
         matches = matcher.find_matches(text)
@@ -41,7 +41,7 @@ class TestPatternMatcher:
     
     def test_trademark_matches(self):
         """Test specialized trademark matching."""
-        matcher = PatternMatcher()
+        matcher = PatternMatcher(pattern="™")
         text = "BrandName™ ProductName® Copyright©"
         
         matches = matcher.find_trademark_matches(text)
@@ -49,7 +49,7 @@ class TestPatternMatcher:
     
     def test_common_symbols(self):
         """Test finding common symbols."""
-        matcher = PatternMatcher()
+        matcher = PatternMatcher(pattern="™")
         text = "BrandName™ ProductName® Copyright© 25° $100"
         
         results = matcher.find_common_symbols(text)
@@ -82,7 +82,7 @@ class TestPatternMatcher:
     
     def test_case_insensitive_matching(self):
         """Test case insensitive matching with custom patterns."""
-        matcher = PatternMatcher(custom_pattern=r'\b\w+\s*™\b')
+        matcher = PatternMatcher(custom_pattern=r'\b\w+\s*™(?!\w)')
         text = "BRANDNAME™ brandname™ BrandName™"
         
         matches = matcher.find_matches(text)

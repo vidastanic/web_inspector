@@ -6,6 +6,7 @@ import os
 import json
 import threading
 import time
+import uuid
 from typing import Dict, List, Any
 from flask import Flask, render_template, request, jsonify, session
 from urllib.parse import urlparse
@@ -49,6 +50,8 @@ class WebCheckerApp:
                 pattern = data.get('pattern', '').strip()
                 max_pages = int(data.get('max_pages', 50))
                 max_depth = int(data.get('max_depth', 3))
+                if max_pages < 1 or max_depth < 0:
+                    return jsonify({'error': 'max_pages must be positive and max_depth non-negative'}), 400
                 follow_sitemap = data.get('follow_sitemap', True)
                 
                 # Validate inputs
@@ -62,7 +65,7 @@ class WebCheckerApp:
                     return jsonify({'error': 'Invalid URL format'}), 400
                 
                 # Generate session ID
-                session_id = f"scrape_{int(time.time())}_{threading.get_ident()}"
+                session_id = f"scrape_{uuid.uuid4().hex}"
                 
                 # Initialize scraper
                 scraper = WebScraper(
@@ -137,7 +140,7 @@ class WebCheckerApp:
             
             session_data = self.active_sessions[session_id]
             session_data['status'] = 'stopped'
-            session_data['scraper'].close()
+            session_data['scraper'].stop()
             
             return jsonify({'status': 'stopped'})
         
@@ -146,7 +149,7 @@ class WebCheckerApp:
             """Clear a session."""
             if session_id in self.active_sessions:
                 session_data = self.active_sessions[session_id]
-                session_data['scraper'].close()
+                session_data['scraper'].stop()
                 del self.active_sessions[session_id]
             
             return jsonify({'status': 'cleared'})
@@ -154,7 +157,9 @@ class WebCheckerApp:
     def _scrape_worker(self, session_id: str, url: str, pattern_matcher: PatternMatcher, 
                       max_pages: int, max_depth: int, follow_sitemap: bool):
         """Background worker for scraping."""
-        session_data = self.active_sessions[session_id]
+        session_data = self.active_sessions.get(session_id)
+        if session_data is None:
+            return
         scraper = session_data['scraper']
         
         try:
@@ -166,8 +171,9 @@ class WebCheckerApp:
             )
             
             session_data['results'] = results
-            session_data['status'] = 'completed'
-            session_data['progress'] = 100
+            session_data['status'] = 'stopped' if scraper.stop_event.is_set() else 'completed'
+            if session_data['status'] == 'completed':
+                session_data['progress'] = 100
             
         except Exception as e:
             self.logger.error(f"Error in scraping worker: {e}")
@@ -192,19 +198,21 @@ class WebCheckerApp:
         url_queue.append((start_url, 0))
         
         # Add sitemap URLs if requested
-        if follow_sitemap:
+        if follow_sitemap and not scraper.stop_event.is_set():
             sitemap_urls = scraper._discover_sitemap_urls(start_url)
             for url in sitemap_urls:
                 if url not in visited_urls:
                     url_queue.append((url, 0))
         
         # Update total pages
-        session_data = self.active_sessions[session_id]
+        session_data = self.active_sessions.get(session_id)
+        if session_data is None:
+            return []
         session_data['total_pages'] = min(len(url_queue), max_pages)
         
         processed_pages = 0
         
-        while url_queue and processed_pages < max_pages:
+        while url_queue and processed_pages < max_pages and not scraper.stop_event.is_set():
             current_url, depth = url_queue.pop(0)
             
             if current_url in visited_urls or depth > max_depth:
@@ -225,7 +233,8 @@ class WebCheckerApp:
                 results.extend(page_results)
                 
                 # Add delay
-                time.sleep(scraper.delay)
+                if scraper.stop_event.wait(scraper.delay):
+                    break
                 
                 # Find new links if we haven't reached max depth
                 if depth < max_depth:
@@ -240,7 +249,7 @@ class WebCheckerApp:
         
         return results
     
-    def run(self, host='0.0.0.0', port=5000, debug=False):
+    def run(self, host='127.0.0.1', port=5000, debug=False):
         """Run the Flask application."""
         self.app.run(host=host, port=port, debug=debug)
 
@@ -277,8 +286,8 @@ def main():
     except:
         pass  # Silently fail if browser can't be opened
     
-    app.run(debug=False, host='0.0.0.0', port=port)
+    app.run(debug=False, host='127.0.0.1', port=port)
 
 
 if __name__ == '__main__':
-    main() 
+    main()

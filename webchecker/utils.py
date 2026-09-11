@@ -27,8 +27,8 @@ def validate_url(url: str) -> bool:
     """Validate if a string is a valid URL."""
     try:
         result = urlparse(url)
-        return all([result.scheme, result.netloc])
-    except:
+        return result.scheme in ('http', 'https') and bool(result.hostname) and result.port != 0
+    except (ValueError, TypeError):
         return False
 
 
@@ -45,7 +45,7 @@ def normalize_url(url: str) -> str:
     url = url.strip()
     
     # If no protocol specified, add https://
-    if not url.startswith(('http://', 'https://')):
+    if '://' not in url:
         url = 'https://' + url
     
     return url
@@ -101,7 +101,7 @@ def extract_domain(url: str) -> Optional[str]:
     """
     try:
         parsed = urlparse(url)
-        return parsed.netloc
+        return parsed.hostname
     except Exception:
         return None
 
@@ -177,4 +177,4 @@ def create_progress_bar(current: int, total: int, width: int = 50) -> str:
     percentage = int((current / total) * 100)
     
     bar = "[" + "=" * progress + " " * (width - progress) + "]"
-    return f"{bar} {percentage}%" 
+    return f"{bar} {percentage}%"

@@ -2,6 +2,15 @@
 
 A comprehensive web scraper that finds specific characters and patterns on websites. Perfect for finding trademark symbols (™, ®, ©), custom patterns, and other special characters across entire websites.
 
+## Attribution
+
+The original package metadata credits **Lysander Mawby**. This repository
+preserves that credit; the September 2026 maintenance changes in this copy
+fix matching, URL validation, cancellation, and tests. A separate public
+repository is available at [lysandermawby/web_inspector](https://github.com/lysandermawby/web_inspector).
+No upstream license was declared in this copy. Publication does not add or
+change the original author's licensing terms.
+
 ## Features
 
 - **Pattern Matching**: Find specific Unicode characters (™, ®, ©) or custom regex patterns
@@ -15,14 +24,16 @@ A comprehensive web scraper that finds specific characters and patterns on websi
 
 ## Installation
 
-This project uses Poetry for dependency management. Make sure you have Poetry installed, then:
+The installed distribution is named `email-scraper`; its Python package and
+commands are named `webchecker`.
+
+Requires Python 3.9 or newer. Install in a virtual environment:
 
 ```bash
-# Install dependencies
-poetry install
-
-# Activate the virtual environment
-poetry shell
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -e ".[test]"
+python -m pytest tests
 ```
 
 ## Usage
@@ -33,11 +44,11 @@ Start the web interface for an easy-to-use GUI:
 
 ```bash
 # Start the web server
-make web
-
-# Or directly with poetry
-poetry run python run_web_server.py
+webchecker-web
 ```
+
+The web interface binds to localhost and is intended for local use. Stop ends
+a crawl after any in-flight request returns (up to the configured timeout).
 
 Then open your browser to `http://localhost:8080` and enjoy the modern web interface with:
 - Real-time progress updates
@@ -73,7 +84,7 @@ python -m webchecker.main https://example.com --pattern "@" --extract-before --e
 
 Use custom regex patterns:
 ```bash
-python -m webchecker.main https://example.com --custom-pattern "\\b\\w+\\s*™\\b" --verbose
+python -m webchecker.main https://example.com --custom-pattern "\\b\\w+\\s*™(?!\\w)" --verbose
 ```
 
 Follow sitemap and limit pages:

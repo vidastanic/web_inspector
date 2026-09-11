@@ -37,7 +37,7 @@ def main():
         app = WebCheckerApp()
         
         def start_server():
-            app.run(debug=False, host='0.0.0.0', port=port)
+            app.run(debug=False, host='127.0.0.1', port=port)
         
         # Start server in background thread
         server_thread = threading.Thread(target=start_server, daemon=True)
